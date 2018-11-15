@@ -8,27 +8,33 @@
  * Documentation: https://github.com/gotwarlost/istanbul/blob/master/coverage.json.md
  *************************************************************************/
 
-
+// Set up Express
 const express = require('express');
 const app = express();
 const port = 3000;
 var bodyParser = require('body-parser');
-var fs = require('fs');
+
+// Support body parsing
 var url = require('url');
 
 // Validation
 const { check, validationResult } = require('express-validator/check');
 
 
-app.get('/', (req,res) => res.send('Hello World!'))
+/**************************** Routes ************************************/
+// Root level route
+app.get('/', (req,res) => res.send('Code Coverage For 4GL'))
 app.listen(port, () => console.log(`Listening on port ${port}!`))
 
-
+// App.use
 app.use('/public', express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json()); // Support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true})); //support encoded bodies
 
+
+// Validated Write JSON
+// TODO: Rename route to something better
 app.post('/ValidatedWriteJson', 
 [
     check('sourceName').isLength({ min:1 }),
@@ -56,6 +62,9 @@ app.post('/ValidatedWriteJson',
     
 });
 
+
+// Coverage.json route 
+// TODO: Remove, this has no validation
 app.post('/WriteCoverageJson',  function(request,respond){
     var covJson = require("./modules/makeIstanbulInput.js");
     var sourceName = request.body.sourceName;
@@ -68,6 +77,8 @@ app.post('/WriteCoverageJson',  function(request,respond){
     respond.send("Written successfully");
 });
 
+// Test route
+// TODO: Remove, we don't need this
 app.post('/receive', function(request, respond) {
 
     // Extract runtime information
@@ -84,14 +95,7 @@ app.post('/receive', function(request, respond) {
         body += data;
     });
 
-    // respond.send("Source: "     + sourceName);
-    respond.send("line: "       + lineNumber);
-    // respond.send("startCol: "   + startCol);
-    // respond.send("endCol: "     + endCol);
-    // request.on('end', function(){
-    //     fs.appendFile(filePath, body, function(){
-    //         respond.send("File appended successfully");
-    //         respond.end();
-    //     });
-    // });
+    respond.send("Source: "     + sourceName);
+    // respond.send("line: "       + lineNumber);
+
 });
