@@ -24,6 +24,19 @@ const { check, validationResult } = require('express-validator/check');
 var gNum  = -1
 gNum += 1;
 
+// Generic class to hold Line information
+class LineInfo {
+    constructor(sourceName, lineNumber, startCol, endCol)
+    {
+        this.sourceName = sourceName;
+        this.lineNumber = lineNumber;
+        this.startCol = startCol;
+        this.endCol = endCol;
+    }
+}
+
+var gLineInfo = new Array();
+
 /**************************** Routes ************************************/
 // Root level route
 app.get('/', (req,res) => res.send('Code Coverage For 4GL'))
@@ -47,8 +60,36 @@ app.post('/GetNum', [
     var num1 = Number(request.body.num1);
     gNum += num1;
     response.send("gNum: " + gNum);
-}
-)
+});
+
+// Get stateful array returned
+app.post('/GetArray', [
+    check('sourceName').isLength({ min:1 }),
+    check('lineNumber').isNumeric(),
+    check('startCol').isNumeric(),
+    check('endCol').isNumeric()   
+], (request, response) =>{
+    const errors = validationResult(request);
+    if (!errors.isEmpty()){
+        return response.status(422).json({ errors: errors.array() });
+    }    
+
+    var covJson = require("./modules/makeIstanbulInput.js");
+    var sourceName = request.body.sourceName;
+    var lineNumber = request.body.lineNumber;
+    var startCol   = request.body.startCol;
+    var endCol     = request.body.endCol;
+
+    // Push this one line structure to a global allocation of lines
+    gLineInfo.push(new LineInfo(sourceName, lineNumber, startCol, endCol));
+
+    // Write to file the entire JSON structure
+    //covJson.writeCoverageJson(sourceName, lineNumber, startCol, endCol);    
+
+    // Send entire JSON structure back after all the posts
+    response.json(gLineInfo);
+
+});
 
 
 // Validated Write JSON
