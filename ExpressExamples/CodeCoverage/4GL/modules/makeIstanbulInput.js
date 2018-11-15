@@ -15,17 +15,17 @@
         var fs = require('fs');
         var filePath = __dirname + "/../public/output/coverage.json";
         var crlf = "\r\n";
-        var myFileData;
+        var myFileData = "";
 
         
         myFileData = "sourceFileName: " + sourceFileName + crlf;
-        myFileData += "Line Number:" + lineNumber + crlf;
-        myFileData += "Column Start" + colStart + crlf;
-        myFileData += "Column End" + colEnd + crlf;
+        myFileData += "Line Number: " + lineNumber + crlf;
+        myFileData += "Column Start: " + colStart + crlf;
+        myFileData += "Column End: " + colEnd + crlf;
         
 
         // Overwrite file if it exists
-        fs.writeFile(filePath, null, function(err) {
+        fs.writeFile(filePath, "", function(err) {
             if(err){
                 // TODO: Implement line number in trace log
                 return console.log(err);

@@ -21,7 +21,7 @@ const { check, validationResult } = require('express-validator/check');
 
 
 app.get('/', (req,res) => res.send('Hello World!'))
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+app.listen(port, () => console.log(`Listening on port ${port}!`))
 
 
 app.use('/public', express.static(__dirname + '/public'));
