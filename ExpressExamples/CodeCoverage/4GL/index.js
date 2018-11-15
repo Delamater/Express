@@ -20,6 +20,9 @@ var url = require('url');
 // Validation
 const { check, validationResult } = require('express-validator/check');
 
+// Globals
+var gNum  = -1
+gNum += 1;
 
 /**************************** Routes ************************************/
 // Root level route
@@ -31,6 +34,21 @@ app.use('/public', express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json()); // Support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true})); //support encoded bodies
+
+// Test stateful variables
+app.post('/GetNum', [
+    check('num1').isNumeric()
+], (request, response) =>{
+    const errors = validationResult(request);
+    if (!errors.isEmpty()){
+        return response.status(422).json({ errors: errors.array() });
+    }
+    // Get number
+    var num1 = Number(request.body.num1);
+    gNum += num1;
+    response.send("gNum: " + gNum);
+}
+)
 
 
 // Validated Write JSON
@@ -99,3 +117,10 @@ app.post('/receive', function(request, respond) {
     // respond.send("line: "       + lineNumber);
 
 });
+
+module.exports = {
+    GetNumber: function GetNumber(num)
+    {
+        num += num;
+    }
+}
