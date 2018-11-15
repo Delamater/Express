@@ -1,0 +1,4 @@
+Local Integer X
+X = 0
+If X : Infbox "X is true" : Else Infbox "X is not true" : Endif
+End
