@@ -30,7 +30,7 @@
                 // TODO: Implement line number in trace log
                 return console.log(err);
             }
-            console.log("File was saved");
+            console.log("File created");
         });
 
         // Append input 
@@ -41,7 +41,7 @@
             }
         });
 
-        console.log("File written to successfully");
+        console.log("File appended to successfully");
     }
 
 

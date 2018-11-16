@@ -19,10 +19,18 @@ var url = require('url');
 
 // Validation
 const { check, validationResult } = require('express-validator/check');
+var covJson = require("./modules/validation.js");
+
+// GUID support
+const uuidv4 = require('uuid/v4');
 
 // Globals
-var gNum  = -1
-gNum += 1;
+var gNum  = 0;
+var gGuid = "";
+
+// Constants
+const kInvalidSessionID = { Status: "Invalid SessionID" };
+const kWriteCompleted =   { Status: "Write completed successfully"};
 
 // Generic class to hold Line information
 class LineInfo {
@@ -48,18 +56,44 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json()); // Support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true})); //support encoded bodies
 
+/***************** Start Session *******************/
+app.post('/StartSession',(request,response) =>{
+
+    gGuid = null;
+    gGuid = uuidv4();
+
+    response.status(200).send({ SessionID: gGuid });
+})
+
+/***************** Terminate Session *******************/
+app.post('/TerminateSession', (request, response) =>{
+    // Clear session information
+    gGuid = null;
+    response.status(200).send({ SessionID: null});
+})
+
+
 // Test stateful variables
 app.post('/GetNum', [
     check('num1').isNumeric()
 ], (request, response) =>{
     const errors = validationResult(request);
     if (!errors.isEmpty()){
+        // 422: Unprocessable Entity. The request was well-formed but was unable to be followed 
+        // due to semantic errors
         return response.status(422).json({ errors: errors.array() });
     }
-    // Get number
-    var num1 = Number(request.body.num1);
-    gNum += num1;
-    response.send("gNum: " + gNum);
+    if (covJson.ValidateSessionID(gGuid))
+    {
+        // Get number
+        var num1 = Number(request.body.num1);
+        gNum += num1;
+        response.send( {SessionID: gGuid, gNum: gNum  });
+    } else{
+        // 403: Forbidden (because there was no session id)
+        response.status(403).send({ Status: "Invalid SessionID" });
+    }
+
 });
 
 // Get stateful array returned
@@ -99,7 +133,8 @@ app.post('/ValidatedWriteJson',
     check('sourceName').isLength({ min:1 }),
     check('lineNumber').isNumeric(),
     check('startCol').isNumeric(),
-    check('endCol').isNumeric()    
+    check('endCol').isNumeric(),
+    check('SessionID').isLength({ min:1 })
 ], 
 (request, response) => {
     // Find validation errors in this request
@@ -109,14 +144,20 @@ app.post('/ValidatedWriteJson',
     }
 
     var covJson = require("./modules/makeIstanbulInput.js");
-    var sourceName = request.body.sourceName;
-    var lineNumber = request.body.lineNumber;
-    var startCol   = request.body.startCol;
-    var endCol     = request.body.endCol;
+    var sourceName      = request.body.sourceName;
+    var lineNumber      = request.body.lineNumber;
+    var startCol        = request.body.startCol;
+    var endCol          = request.body.endCol;
+    var mySessionID     = request.body.SessionID;
+    
+    if ( gGuid == mySessionID ){
+        covJson.writeCoverageJson(sourceName, lineNumber, startCol, endCol);
+        response.status(200).send(JSON.stringify(kWriteCompleted));
+    } else{
+        response.status(403).send(kInvalidSessionID);
+    }
 
-    covJson.writeCoverageJson(sourceName, lineNumber, startCol, endCol);
 
-    response.send("Written successfully");
 
     
 });
@@ -133,7 +174,8 @@ app.post('/WriteCoverageJson',  function(request,respond){
 
     covJson.writeCoverageJson(sourceName, lineNumber, startCol, endCol);
 
-    respond.send("Written successfully");
+    respond.status(200).send({ Status: "Coverage.json built"});
+    // respond.send("Written successfully");
 });
 
 // Test route
@@ -159,9 +201,11 @@ app.post('/receive', function(request, respond) {
 
 });
 
-module.exports = {
-    GetNumber: function GetNumber(num)
-    {
-        num += num;
-    }
-}
+
+
+// module.exports = {
+//     GetNumber: function GetNumber(num)
+//     {
+//         num += num;
+//     }
+// }
