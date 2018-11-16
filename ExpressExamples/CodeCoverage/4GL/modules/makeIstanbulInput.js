@@ -41,8 +41,77 @@
             }
         });
 
+        // var st = "";
+        // st = makeStatement();
+        fs.appendFile(filePath, makeStatement(), function(err){
+            if(err){
+                // TODO: Implement line number in trace log
+                return console.log(err);
+            }
+        })
+
         console.log("File appended to successfully");
+    },
+
+    writeCoverageJson2:
+    function writeCoverageJson2(lineInfo){
+        console.log(JSON.stringify(lineInfo));
+
+        var fs = require('fs');
+        var filePath = __dirname + "/../public/output/coverage.json";
+        fs.writeFile(filePath,JSON.stringify(lineInfo, null, 2), function(err){
+            if(err){
+                // TODO: Implement line number in trace log
+                return console.log(err);
+            }            
+        })
+
     }
-
-
  }
+
+ 
+
+ function makeHeader(fileName, path)
+{
+    var result = {fileName:{"path":path}};
+    return JSON.stringify(result);
+    
+}
+function makeBranchMap()
+{
+
+}
+
+function makeBranch()
+{
+
+}
+
+function makeStatementMap()
+{
+
+}
+
+function makeStatement()
+{
+    var sm = "s:{";
+    var i;
+    for (i = 0; i<10;i++) {
+        sm += '"' + i + '":1,';
+        sm += '"' + i+1 + '":1';
+    }
+    sm += "},"
+
+    return sm;
+
+}
+
+function makeFunctionMap()
+{
+
+}
+
+function makeFunction()
+{
+    
+}

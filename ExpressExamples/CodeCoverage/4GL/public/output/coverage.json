@@ -1,4 +1,20 @@
-sourceFileName: subaus
-Line Number: 1
-Column Start: 1
-Column End: 10
+[
+  {
+    "sourceName": "SUBAUS",
+    "lineNumber": "1",
+    "startCol": "1",
+    "endCol": "10"
+  },
+  {
+    "sourceName": "SUBAUS",
+    "lineNumber": "1",
+    "startCol": "1",
+    "endCol": "10"
+  },
+  {
+    "sourceName": "SUBAUS",
+    "lineNumber": "1",
+    "startCol": "1",
+    "endCol": "10"
+  }
+]

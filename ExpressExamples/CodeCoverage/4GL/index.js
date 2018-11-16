@@ -21,29 +21,21 @@ var url = require('url');
 const { check, validationResult } = require('express-validator/check');
 var covJson = require("./modules/validation.js");
 
+// Generic class to hold Line information
+const clsLineInfo = require('./Classes/LineInfo.js')
+
 // GUID support
 const uuidv4 = require('uuid/v4');
 
 // Globals
 var gNum  = 0;
 var gGuid = "";
+var gLineInfo = new Array();
 
 // Constants
 const kInvalidSessionID = { Status: "Invalid SessionID" };
 const kWriteCompleted =   { Status: "Write completed successfully"};
 
-// Generic class to hold Line information
-class LineInfo {
-    constructor(sourceName, lineNumber, startCol, endCol)
-    {
-        this.sourceName = sourceName;
-        this.lineNumber = lineNumber;
-        this.startCol = startCol;
-        this.endCol = endCol;
-    }
-}
-
-var gLineInfo = new Array();
 
 /**************************** Routes ************************************/
 // Root level route
@@ -115,7 +107,8 @@ app.post('/GetArray', [
     var endCol     = request.body.endCol;
 
     // Push this one line structure to a global allocation of lines
-    gLineInfo.push(new LineInfo(sourceName, lineNumber, startCol, endCol));
+     gLineInfo.push(new clsLineInfo.LineInfo(sourceName, lineNumber, startCol, endCol));
+   
 
     // Write to file the entire JSON structure
     //covJson.writeCoverageJson(sourceName, lineNumber, startCol, endCol);    
@@ -151,7 +144,8 @@ app.post('/ValidatedWriteJson',
     var mySessionID     = request.body.SessionID;
     
     if ( gGuid == mySessionID ){
-        covJson.writeCoverageJson(sourceName, lineNumber, startCol, endCol);
+        // covJson.writeCoverageJson(sourceName, lineNumber, startCol, endCol);
+        covJson.writeCoverageJson2(gLineInfo);
         response.status(200).send(JSON.stringify(kWriteCompleted));
     } else{
         response.status(403).send(kInvalidSessionID);
