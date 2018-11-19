@@ -33,8 +33,9 @@ var gGuid = "";
 var gLineInfo = new Array();
 
 // Constants
-const kInvalidSessionID = { Status: "Invalid SessionID" };
-const kWriteCompleted =   { Status: "Write completed successfully"};
+const kInvalidSessionID =   { Status: "Invalid SessionID" };
+const kWriteCompleted =     { Status: "Write completed successfully" };
+const kNoLinesToWrite =     { Status: "No lines to write" };
 
 
 /**************************** Routes ************************************/
@@ -58,11 +59,32 @@ app.post('/StartSession',(request,response) =>{
 })
 
 /***************** Terminate Session *******************/
-app.post('/TerminateSession', (request, response) =>{
-    // Clear session information
-    gGuid = null;
-    response.status(200).send({ SessionID: null});
-})
+app.post('/TerminateSession',[check('SessionID').isLength({ min:1 })],  (request, response) =>{
+    // Obtain session ID
+    var mySessionID     = request.body.SessionID;
+
+    if ( gGuid == mySessionID ){
+        if ( gLineInfo != null ) {
+            // Write intermediate file required to build Coverage.json
+            var covJson = require("./modules/makeIstanbulInput.js");        
+            covJson.writeCoverageJson2( gLineInfo );
+            // Clear session information
+            gGuid = null;
+            gLineInfo = null;
+            gLineInfo = new Array();
+            response.status(200).send({ kWriteCompleted });
+        }
+        else {
+            // Clear GUID and Line arrays. Tests will need to be re-run as we 
+            // are not storing the details. 
+            gGuid = null;
+            gLineInfo = null;
+            response.status(403).send( kNoLinesToWrite );
+        }        
+    } else{
+        response.status(403).send( kInvalidSessionID );
+    }
+});
 
 
 // Test stateful variables
@@ -83,17 +105,18 @@ app.post('/GetNum', [
         response.send( {SessionID: gGuid, gNum: gNum  });
     } else{
         // 403: Forbidden (because there was no session id)
-        response.status(403).send({ Status: "Invalid SessionID" });
+        response.status(403).send({ kInvalidSessionID });
     }
 
 });
 
 // Get stateful array returned
-app.post('/GetArray', [
+app.post('/SubmitLine', [
     check('sourceName').isLength({ min:1 }),
     check('lineNumber').isNumeric(),
     check('startCol').isNumeric(),
-    check('endCol').isNumeric()   
+    check('endCol').isNumeric(),
+    check('SessionID').isLength({ min:1 }) 
 ], (request, response) =>{
     const errors = validationResult(request);
     if (!errors.isEmpty()){
@@ -105,17 +128,16 @@ app.post('/GetArray', [
     var lineNumber = request.body.lineNumber;
     var startCol   = request.body.startCol;
     var endCol     = request.body.endCol;
+    var mySessionID     = request.body.SessionID;
 
-    // Push this one line structure to a global allocation of lines
-     gLineInfo.push(new clsLineInfo.LineInfo(sourceName, lineNumber, startCol, endCol));
-   
+    if ( gGuid == mySessionID ){
 
-    // Write to file the entire JSON structure
-    //covJson.writeCoverageJson(sourceName, lineNumber, startCol, endCol);    
-
-    // Send entire JSON structure back after all the posts
-    response.json(gLineInfo);
-
+        // Push this one line structure to a global allocation of lines
+        gLineInfo.push(new clsLineInfo.LineInfo(sourceName, lineNumber, startCol, endCol));          
+        response.status(200).send(JSON.stringify(gLineInfo, null, 2));
+    } else{
+        response.status(403).send(kInvalidSessionID);
+    }
 });
 
 
@@ -149,11 +171,7 @@ app.post('/ValidatedWriteJson',
         response.status(200).send(JSON.stringify(kWriteCompleted));
     } else{
         response.status(403).send(kInvalidSessionID);
-    }
-
-
-
-    
+    }   
 });
 
 
